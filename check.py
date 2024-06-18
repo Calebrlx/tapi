@@ -72,7 +72,7 @@ def main():
 if __name__ == '__main__':
     # Run the Flask app in a separate thread if you want to manually trigger the process
     from threading import Thread
-    flask_thread = Thread(target=lambda: app.run(port=5000))
+    flask_thread = Thread(target=lambda: app.run(host='0.0.0.0', port=5000))
     flask_thread.start()
     
     # Run the main monitoring loop
