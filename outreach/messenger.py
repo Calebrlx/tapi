@@ -79,9 +79,11 @@ def automate_task(slug, msg):
     pyautogui.press('enter')
     time.sleep(2)  # Adjust sleep time as needed
 
-schedule.every(30).minutes.do(send_greeting)
-schedule.every().day.at("12:00").do(follow_up_check)
+send_greeting()
 
-while True:
-    schedule.run_pending()
-    time.sleep(1)
+# schedule.every(30).minutes.do(send_greeting)
+# schedule.every().day.at("12:00").do(follow_up_check)
+
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
