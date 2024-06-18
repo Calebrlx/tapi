@@ -12,15 +12,15 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
-  api:
+  db_api:
     build: .
     restart: always
-    depends_on:
-      - db
     environment:
       DATABASE_URL: mysql+mysqlconnector://root:abghse@db/sales_system
     ports:
       - "8000:8000"
+    depends_on:
+      - db
 
 volumes:
   db_data:
