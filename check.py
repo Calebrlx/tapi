@@ -38,6 +38,7 @@ def manual_trigger():
     take_screenshot()
     if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
         if compare_screenshots(CURRENT_SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH):
+            print("[ TRIGGER ]")
             #send_signal_to_zapier()
     if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
         os.remove(PREVIOUS_SCREENSHOT_PATH)
