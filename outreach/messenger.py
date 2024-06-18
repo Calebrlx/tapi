@@ -4,6 +4,10 @@ import pyautogui
 import time
 from datetime import datetime, timedelta
 import schedule
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # API URL for the database
 API_URL = "http://10.0.0.25:8000"
@@ -41,49 +45,66 @@ follow_up = [
 ]
 
 def send_greeting():
-    response = requests.get(f"{API_URL}/prospects?skip=0&limit=1")
-    if response.status_code == 200:
+    try:
+        response = requests.get(f"{API_URL}/prospects?skip=0&limit=1")
+        response.raise_for_status()
         prospects = response.json()
         if prospects:
             prospect = prospects[0]
             if prospect['status'] == 'not_contacted':
                 message = random.choice(greetings)
+                logging.info(f"Sending greeting to {prospect['slug']}: {message}")
                 automate_task(prospect['slug'], message)
                 update_prospect_status(prospect['id'], 'contacted')
+    except requests.RequestException as e:
+        logging.error(f"Error while sending greeting: {e}")
 
 def follow_up_check():
-    response = requests.get(f"{API_URL}/prospects?skip=0&limit=100")
-    if response.status_code == 200:
+    try:
+        response = requests.get(f"{API_URL}/prospects?skip=0&limit=100")
+        response.raise_for_status()
         prospects = response.json()
         for prospect in prospects:
             if prospect['status'] == 'contacted':
                 updated_at = datetime.strptime(prospect['updated_at'], "%Y-%m-%dT%H:%M:%S.%f")
                 if datetime.utcnow() - updated_at > timedelta(days=1):
                     message = random.choice(follow_up)
+                    logging.info(f"Sending follow-up to {prospect['slug']}: {message}")
                     automate_task(prospect['slug'], message)
                     update_prospect_status(prospect['id'], 'followed_up')
+    except requests.RequestException as e:
+        logging.error(f"Error while checking follow-ups: {e}")
 
 def update_prospect_status(prospect_id, status):
-    response = requests.put(f"{API_URL}/prospects/{prospect_id}", json={"status": status})
-    if response.status_code != 200:
-        print(f"Failed to update prospect {prospect_id} status to {status}")
+    try:
+        response = requests.put(f"{API_URL}/prospects/{prospect_id}", json={"status": status})
+        response.raise_for_status()
+        logging.info(f"Updated prospect {prospect_id} status to {status}")
+    except requests.RequestException as e:
+        logging.error(f"Failed to update prospect {prospect_id} status to {status}: {e}")
 
 def automate_task(slug, msg):
-    pyautogui.moveTo(300, 300, duration=0.5)
-    pyautogui.click()
-    pyautogui.moveTo(670, 130, duration=0.5)
-    pyautogui.click()
-    pyautogui.typewrite(slug, interval=0.1)
-    pyautogui.press('enter')
-    pyautogui.typewrite(msg, interval=0.1)
-    pyautogui.press('enter')
-    time.sleep(2)  # Adjust sleep time as needed
+    try:
+        logging.info(f"Automating task for {slug}: {msg}")
+        pyautogui.moveTo(300, 300, duration=0.5)
+        pyautogui.click()
+        pyautogui.moveTo(670, 130, duration=0.5)
+        pyautogui.click()
+        pyautogui.typewrite(slug, interval=0.1)
+        pyautogui.press('enter')
+        pyautogui.typewrite(msg, interval=0.1)
+        pyautogui.press('enter')
+        time.sleep(2)  # Adjust sleep time as needed
+    except pyautogui.FailSafeException as e:
+        logging.error(f"Failed to automate task for {slug}: {e}")
 
-send_greeting()
+if __name__ == "__main__":
+    send_greeting()
 
-# schedule.every(30).minutes.do(send_greeting)
-# schedule.every().day.at("12:00").do(follow_up_check)
+    # Uncomment the following lines for scheduled tasks
+    # schedule.every(30).minutes.do(send_greeting)
+    # schedule.every().day.at("12:00").do(follow_up_check)
 
-# while True:
-#     schedule.run_pending()
-#     time.sleep(1)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
