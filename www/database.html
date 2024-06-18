@@ -4,6 +4,88 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prospect Management</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-top: 20px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: #1e1e1e;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .form-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .form-group input {
+      width: 70%;
+      padding: 10px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background-color: #333;
+      color: #e0e0e0;
+    }
+
+    .form-group button {
+      width: 25%;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      background-color: #6200ea;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .form-group button:hover {
+      background-color: #3700b3;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    table th, table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #333;
+    }
+
+    table th {
+      background-color: #333;
+    }
+
+    table tr:nth-child(even) {
+      background-color: #2a2a2a;
+    }
+  </style>
   <script>
     async function addProspect() {
       const slug = document.getElementById('slug').value;
@@ -16,6 +98,7 @@
       });
       const result = await response.json();
       console.log(result);
+      loadProspects();
     }
 
     async function sendMessage(slug) {
@@ -29,12 +112,52 @@
       const result = await response.json();
       console.log(result);
     }
+
+    async function loadProspects() {
+      const response = await fetch('http://10.0.0.25:8000/prospects/');
+      const prospects = await response.json();
+      const tableBody = document.getElementById('prospect-table-body');
+      tableBody.innerHTML = '';
+      prospects.forEach(prospect => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${prospect.slug}</td>
+          <td>${prospect.status}</td>
+          <td>${prospect.contact_count}</td>
+          <td>${new Date(prospect.created_at).toLocaleString()}</td>
+          <td>${new Date(prospect.updated_at).toLocaleString()}</td>
+          <td><button onclick="sendMessage('${prospect.slug}')">Send Message</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', loadProspects);
   </script>
 </head>
 <body>
-  <h1>Prospect Management</h1>
-  <input type="text" id="slug" placeholder="Enter prospect slug">
-  <button onclick="addProspect()">Add Prospect</button>
-  <button onclick="sendMessage(document.getElementById('slug').value)">Send Message</button>
+  <div class="container">
+    <h1>Prospect Management</h1>
+    <div class="form-group">
+      <input type="text" id="slug" placeholder="Enter prospect slug">
+      <button onclick="addProspect()">Add Prospect</button>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Slug</th>
+            <th>Status</th>
+            <th>Contact Count</th>
+            <th>Created At</th>
+            <th>Updated At</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="prospect-table-body">
+        </tbody>
+      </table>
+    </div>
+  </div>
 </body>
 </html>
