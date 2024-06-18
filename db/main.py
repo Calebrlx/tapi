@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 import enum
 
-DATABASE_URL = "mysql+mysqlconnector://root:abghse@10.0.0.25/sales_system"
+DATABASE_URL = "mysql+mysqlconnector://root:abghse@db/sales_system"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,8 +39,8 @@ class Lead(Base):
     __tablename__ = "leads"
     id = Column(Integer, primary_key=True, index=True)
     prospect_id = Column(Integer, ForeignKey("prospects.id"), nullable=False)
-    messages = Column(String, nullable=False)
-    notes = Column(String, nullable=True)
+    messages = Column(String(2048), nullable=False)  # Specify length for VARCHAR
+    notes = Column(String(2048), nullable=True)  # Specify length for VARCHAR
     status = Column(Enum(LeadStatus), default=LeadStatus.responded, nullable=False)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
