@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prospect Management</title>
+  <script>
+    async function addProspect() {
+      const slug = document.getElementById('slug').value;
+      const response = await fetch('http://10.0.0.25:8000/prospects/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slug }),
+      });
+      const result = await response.json();
+      console.log(result);
+    }
+
+    async function sendMessage(slug) {
+      const response = await fetch('http://10.0.0.25:8000/send-message/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slug }),
+      });
+      const result = await response.json();
+      console.log(result);
+    }
+  </script>
+</head>
+<body>
+  <h1>Prospect Management</h1>
+  <input type="text" id="slug" placeholder="Enter prospect slug">
+  <button onclick="addProspect()">Add Prospect</button>
+  <button onclick="sendMessage(document.getElementById('slug').value)">Send Message</button>
+</body>
+</html>
