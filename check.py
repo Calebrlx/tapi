@@ -7,16 +7,21 @@ from flask import Flask, request, jsonify
 
 # Configuration
 CHECK_INTERVAL = 60  # Interval in seconds to check for changes
-SCREENSHOT_PATH = 'screenshot.png'
-PREVIOUS_SCREENSHOT_PATH = 'previous_screenshot.png'
+SCREENSHOT_DIR = 'screenshots'
+CURRENT_SCREENSHOT_PATH = os.path.join(SCREENSHOT_DIR, 'current_screenshot.png')
+PREVIOUS_SCREENSHOT_PATH = os.path.join(SCREENSHOT_DIR, 'previous_screenshot.png')
 ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/your_zapier_webhook_id/'
+
+# Ensure the screenshot directory exists
+if not os.path.exists(SCREENSHOT_DIR):
+    os.makedirs(SCREENSHOT_DIR)
 
 # Flask app for manual trigger (optional)
 app = Flask(__name__)
 
 def take_screenshot():
     screenshot = pyautogui.screenshot()
-    screenshot.save(SCREENSHOT_PATH)
+    screenshot.save(CURRENT_SCREENSHOT_PATH)
 
 def compare_screenshots(img1_path, img2_path):
     img1 = Image.open(img1_path)
@@ -32,10 +37,11 @@ def send_signal_to_zapier():
 def manual_trigger():
     take_screenshot()
     if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
-        if compare_screenshots(SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH):
-            send_signal_to_zapier()
-    if os.path.exists(SCREENSHOT_PATH):
-        os.rename(SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH)
+        if compare_screenshots(CURRENT_SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH):
+            #send_signal_to_zapier()
+    if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
+        os.remove(PREVIOUS_SCREENSHOT_PATH)
+    os.rename(CURRENT_SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH)
     return jsonify({"status": "Triggered"}), 200
 
 def main():
@@ -45,15 +51,19 @@ def main():
         
         # If there is a previous screenshot, compare it with the new one
         if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
-            if compare_screenshots(SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH):
+            if compare_screenshots(CURRENT_SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH):
                 print("Change detected!")
-                # send_signal_to_zapier()
+                #send_signal_to_zapier()
             else:
                 print("No change detected.")
         
+        # Delete the old previous screenshot if it exists
+        if os.path.exists(PREVIOUS_SCREENSHOT_PATH):
+            os.remove(PREVIOUS_SCREENSHOT_PATH)
+        
         # Move the current screenshot to previous screenshot
-        if os.path.exists(SCREENSHOT_PATH):
-            os.rename(SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH)
+        if os.path.exists(CURRENT_SCREENSHOT_PATH):
+            os.rename(CURRENT_SCREENSHOT_PATH, PREVIOUS_SCREENSHOT_PATH)
         
         # Wait for the next interval
         time.sleep(CHECK_INTERVAL)
